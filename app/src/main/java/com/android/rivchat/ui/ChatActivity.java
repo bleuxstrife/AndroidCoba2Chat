@@ -122,6 +122,7 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
                         newMessage.idReceiver = (String) mapMessage.get("idReceiver");
                         newMessage.text = (String) mapMessage.get("text");
                         newMessage.timestamp = (long) mapMessage.get("timestamp");
+                        newMessage.url_file = (String) mapMessage.get("url_file");
 //                        newMessage.file = dataSnapshot.getValue(FileModel.class);
                         consersation.getListMessageData().add(newMessage);
                         adapter.notifyDataSetChanged();
@@ -304,7 +305,7 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
                     newMessage.idSender = StaticConfig.UID;
                     newMessage.idReceiver = roomId;
                     newMessage.timestamp = System.currentTimeMillis();
-                    newMessage.file = fileModel;
+                    newMessage.url_file = fileModel.getUrl_file();
                     FirebaseDatabase.getInstance().getReference().child("message/" + roomId).push().setValue(newMessage);
                 }
             });
@@ -340,7 +341,7 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
                     newMessage.idSender = StaticConfig.UID;
                     newMessage.idReceiver = roomId;
                     newMessage.timestamp = System.currentTimeMillis();
-                    newMessage.file = fileModel;
+                    newMessage.url_file = fileModel.getUrl_file();
                     FirebaseDatabase.getInstance().getReference().child("message/" + roomId).push().setValue(newMessage);
                 }
             });
@@ -401,11 +402,12 @@ class ListMessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
         if (holder instanceof ItemMessageFriendHolder) {
 
-            if(consersation.getListMessageData().get(position).file!=null){
+            if(consersation.getListMessageData().get(position).url_file!=null){
                 ((ItemMessageFriendHolder) holder).layoutImage.setVisibility(View.VISIBLE);
                 ((ItemMessageFriendHolder) holder).txtContent.setVisibility(View.GONE);
-                Picasso.with(context).load(consersation.getListMessageData().get(position).file.getUrl_file())
-                        .error(R.mipmap.ic_launcher)
+                Picasso.with(context).load(consersation.getListMessageData().get(position).url_file)
+                        .error(R.mipmap.ic_launcher).resize(100, 100)
+                        .centerCrop()
                         .placeholder(R.mipmap.ic_launcher)
                         .into(((ItemMessageFriendHolder) holder).image);
             } else {
@@ -443,11 +445,12 @@ class ListMessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 }
             }
         } else if (holder instanceof ItemMessageUserHolder) {
-            if(consersation.getListMessageData().get(position).file!=null){
+            if(consersation.getListMessageData().get(position).url_file!=null){
                 ((ItemMessageUserHolder) holder).layoutImage.setVisibility(View.VISIBLE);
                 ((ItemMessageUserHolder) holder).txtContent.setVisibility(View.GONE);
-                Picasso.with(context).load(consersation.getListMessageData().get(position).file.getUrl_file())
-                        .error(R.mipmap.ic_launcher)
+                Picasso.with(context).load(consersation.getListMessageData().get(position).url_file)
+                        .error(R.mipmap.ic_launcher).resize(100, 100)
+                        .centerCrop()
                         .placeholder(R.mipmap.ic_launcher)
                         .into(((ItemMessageUserHolder) holder).image);
             } else {
