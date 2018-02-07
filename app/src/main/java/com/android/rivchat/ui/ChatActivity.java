@@ -1,5 +1,7 @@
 package com.android.rivchat.ui;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -16,8 +18,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.format.DateFormat;
+import android.text.format.DateUtils;
 import android.util.Base64;
 import android.util.Log;
+import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -27,7 +31,9 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.android.rivchat.BuildConfig;
 import com.android.rivchat.model.FileModel;
@@ -58,6 +64,8 @@ import java.util.HashMap;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
+import static android.content.Context.CLIPBOARD_SERVICE;
+
 
 public class ChatActivity extends AppCompatActivity implements View.OnClickListener {
     private RecyclerView recyclerChat;
@@ -83,7 +91,7 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
     private static final int IMAGE_GALLERY_REQUEST = 1;
     private static final int IMAGE_CAMERA_REQUEST = 2;
     private static final int PLACE_PICKER_REQUEST = 3;
-
+    ProgressBar progressBar;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -92,7 +100,7 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
         idFriend = intentData.getCharSequenceArrayListExtra(StaticConfig.INTENT_KEY_CHAT_ID);
         roomId = intentData.getStringExtra(StaticConfig.INTENT_KEY_CHAT_ROOM_ID);
         String nameFriend = intentData.getStringExtra(StaticConfig.INTENT_KEY_CHAT_FRIEND);
-
+        progressBar = (ProgressBar) findViewById(R.id.progressBar);
         consersation = new Consersation();
         btnSend = (ImageButton) findViewById(R.id.btnSend);
         btnSend.setOnClickListener(this);
@@ -112,6 +120,7 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
             recyclerChat = (RecyclerView) findViewById(R.id.recyclerChat);
             recyclerChat.setLayoutManager(linearLayoutManager);
             adapter = new ListMessageAdapter(this, consersation, bitmapAvataFriend, bitmapAvataUser);
+            progressBar.setVisibility(View.VISIBLE);
             FirebaseDatabase.getInstance().getReference().child("message/" + roomId).addChildEventListener(new ChildEventListener() {
                 @Override
                 public void onChildAdded(DataSnapshot dataSnapshot, String s) {
@@ -127,6 +136,7 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
                         consersation.getListMessageData().add(newMessage);
                         adapter.notifyDataSetChanged();
                         linearLayoutManager.scrollToPosition(consersation.getListMessageData().size() - 1);
+                        progressBar.setVisibility(View.GONE);
                     }
                 }
 
@@ -197,6 +207,7 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
                 newMessage.idSender = StaticConfig.UID;
                 newMessage.idReceiver = roomId;
                 newMessage.timestamp = System.currentTimeMillis();
+                progressBar.setVisibility(View.VISIBLE);
                 FirebaseDatabase.getInstance().getReference().child("message/" + roomId).push().setValue(newMessage);
             }
         }
@@ -285,6 +296,7 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
 
     private void sendFileFirebase(StorageReference storageReference, final Uri file){
         if (storageReference != null){
+            progressBar.setVisibility(View.VISIBLE);
             final String name = DateFormat.format("yyyy-MM-dd_hhmmss", new Date()).toString();
             StorageReference imageGalleryRef = storageReference.child(name+"_gallery");
             UploadTask uploadTask = imageGalleryRef.putFile(file);
@@ -292,6 +304,8 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
                 @Override
                 public void onFailure(@NonNull Exception e) {
                     Log.e(TAG,"onFailure sendFileFirebase "+e.getMessage());
+                    progressBar.setVisibility(View.GONE);
+                    Toast.makeText(ChatActivity.this, "Upload Gambar Gagal",Toast.LENGTH_SHORT);
                 }
             }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                 @Override
@@ -310,7 +324,8 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
                 }
             });
         }else{
-            //IS NULL
+            Toast.makeText(ChatActivity.this, "Gambar Tidak Ditemukan",Toast.LENGTH_SHORT);
+            progressBar.setVisibility(View.GONE);
         }
 
     }
@@ -320,6 +335,7 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
      */
     private void sendFileFirebase(StorageReference storageReference, final File file){
         if (storageReference != null){
+            progressBar.setVisibility(View.VISIBLE);
             Uri photoURI = FileProvider.getUriForFile(ChatActivity.this,
                     BuildConfig.APPLICATION_ID + ".provider",
                     file);
@@ -328,6 +344,8 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
                 @Override
                 public void onFailure(@NonNull Exception e) {
                     Log.e(TAG,"onFailure sendFileFirebase "+e.getMessage());
+                    Toast.makeText(ChatActivity.this, "Upload Gambar Gagal",Toast.LENGTH_SHORT);
+                    progressBar.setVisibility(View.GONE);
                 }
             }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                 @Override
@@ -337,7 +355,7 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
                     FileModel fileModel = new FileModel("img",downloadUrl.toString(),file.getName(),file.length()+"");
                     editWriteMessage.setText("");
                     Message newMessage = new Message();
-                    newMessage.text = "";
+                    newMessage.text = "image";
                     newMessage.idSender = StaticConfig.UID;
                     newMessage.idReceiver = roomId;
                     newMessage.timestamp = System.currentTimeMillis();
@@ -346,7 +364,8 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
                 }
             });
         }else{
-            //IS NULL
+            Toast.makeText(ChatActivity.this, "Gambar Tidak Ditemukan",Toast.LENGTH_SHORT);
+            progressBar.setVisibility(View.GONE);
         }
 
     }
@@ -399,21 +418,31 @@ class ListMessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     }
 
     @Override
-    public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
+    public void onBindViewHolder(RecyclerView.ViewHolder holder, final int position) {
         if (holder instanceof ItemMessageFriendHolder) {
 
             if(consersation.getListMessageData().get(position).url_file!=null){
                 ((ItemMessageFriendHolder) holder).layoutImage.setVisibility(View.VISIBLE);
-                ((ItemMessageFriendHolder) holder).txtContent.setVisibility(View.GONE);
+                ((ItemMessageFriendHolder) holder).layoutText.setVisibility(View.GONE);
                 Picasso.with(context).load(consersation.getListMessageData().get(position).url_file)
                         .error(R.mipmap.ic_launcher).resize(100, 100)
                         .centerCrop()
                         .placeholder(R.mipmap.ic_launcher)
                         .into(((ItemMessageFriendHolder) holder).image);
+                ((ItemMessageFriendHolder) holder).image.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Intent intent = new Intent(context,FullScreenImageActivity.class);
+                        intent.putExtra("urlPhotoClick",consersation.getListMessageData().get(position).url_file);
+                        context.startActivity(intent);
+                    }
+                });
+                ((ItemMessageFriendHolder) holder).timeImage.setText(converteTimestamp(String.valueOf(consersation.getListMessageData().get(position).timestamp)));
             } else {
-                ((ItemMessageFriendHolder) holder).txtContent.setVisibility(View.VISIBLE);
+                ((ItemMessageFriendHolder) holder).layoutText.setVisibility(View.VISIBLE);
                 ((ItemMessageFriendHolder) holder).layoutImage.setVisibility(View.GONE);
                 ((ItemMessageFriendHolder) holder).txtContent.setText(consersation.getListMessageData().get(position).text);
+                ((ItemMessageFriendHolder) holder).timeText.setText(converteTimestamp(String.valueOf(consersation.getListMessageData().get(position).timestamp)));
             }
             Bitmap currentAvata = bitmapAvata.get(consersation.getListMessageData().get(position).idSender);
             if (currentAvata != null) {
@@ -447,16 +476,26 @@ class ListMessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         } else if (holder instanceof ItemMessageUserHolder) {
             if(consersation.getListMessageData().get(position).url_file!=null){
                 ((ItemMessageUserHolder) holder).layoutImage.setVisibility(View.VISIBLE);
-                ((ItemMessageUserHolder) holder).txtContent.setVisibility(View.GONE);
+                ((ItemMessageUserHolder) holder).layoutText.setVisibility(View.GONE);
                 Picasso.with(context).load(consersation.getListMessageData().get(position).url_file)
                         .error(R.mipmap.ic_launcher).resize(100, 100)
                         .centerCrop()
                         .placeholder(R.mipmap.ic_launcher)
                         .into(((ItemMessageUserHolder) holder).image);
+                ((ItemMessageUserHolder) holder).image.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Intent intent = new Intent(context,FullScreenImageActivity.class);
+                        intent.putExtra("urlPhotoClick",consersation.getListMessageData().get(position).url_file);
+                        context.startActivity(intent);
+                    }
+                });
+                ((ItemMessageUserHolder) holder).timeImage.setText(converteTimestamp(String.valueOf(consersation.getListMessageData().get(position).timestamp)));
             } else {
-                ((ItemMessageUserHolder) holder).txtContent.setVisibility(View.VISIBLE);
+                ((ItemMessageUserHolder) holder).layoutText.setVisibility(View.VISIBLE);
                 ((ItemMessageUserHolder) holder).layoutImage.setVisibility(View.GONE);
                 ((ItemMessageUserHolder) holder).txtContent.setText(consersation.getListMessageData().get(position).text);
+                ((ItemMessageUserHolder) holder).timeText.setText(converteTimestamp(String.valueOf(consersation.getListMessageData().get(position).timestamp)));
             }
 
             if (bitmapAvataUser != null) {
@@ -474,13 +513,18 @@ class ListMessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     public int getItemCount() {
         return consersation.getListMessageData().size();
     }
+
+    public CharSequence converteTimestamp(String mileSegundos){
+        return DateUtils.getRelativeTimeSpanString(Long.parseLong(mileSegundos),System.currentTimeMillis(), DateUtils.SECOND_IN_MILLIS);
+    }
 }
 
 class ItemMessageUserHolder extends RecyclerView.ViewHolder {
     public TextView txtContent;
     public CircleImageView avata;
     public ImageView image;
-    public LinearLayout layoutImage;
+    public LinearLayout layoutImage, layoutText;
+    public TextView timeText, timeImage;
 
     public ItemMessageUserHolder(View itemView) {
         super(itemView);
@@ -488,6 +532,9 @@ class ItemMessageUserHolder extends RecyclerView.ViewHolder {
         avata = (CircleImageView) itemView.findViewById(R.id.imageView2);
         image = (ImageView) itemView.findViewById(R.id.image_user);
         layoutImage = (LinearLayout) itemView.findViewById(R.id.layout_image_user);
+        layoutText = (LinearLayout)itemView.findViewById(R.id.layout_text_user);
+        timeText = (TextView) itemView.findViewById(R.id.time_user_text);
+        timeImage = (TextView) itemView.findViewById(R.id.time_user_image);
     }
 }
 
@@ -495,7 +542,8 @@ class ItemMessageFriendHolder extends RecyclerView.ViewHolder {
     public TextView txtContent;
     public CircleImageView avata;
     public ImageView image;
-    public LinearLayout layoutImage;
+    public LinearLayout layoutImage, layoutText;
+    public TextView timeText, timeImage;
 
     public ItemMessageFriendHolder(View itemView) {
         super(itemView);
@@ -503,6 +551,11 @@ class ItemMessageFriendHolder extends RecyclerView.ViewHolder {
         avata = (CircleImageView) itemView.findViewById(R.id.imageView3);
         image = (ImageView) itemView.findViewById(R.id.image_friend);
         layoutImage = (LinearLayout) itemView.findViewById(R.id.layout_image_friend);
+        layoutText = (LinearLayout)itemView.findViewById(R.id.layout_text_friend);
+        timeText = (TextView) itemView.findViewById(R.id.time_friend_text);
+        timeImage = (TextView) itemView.findViewById(R.id.time_friend_image);
     }
+
+
 }
 

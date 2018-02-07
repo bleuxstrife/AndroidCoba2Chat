@@ -14,25 +14,42 @@
         android:layout_alignParentEnd="true"
         android:layout_marginEnd="5dp"
         android:src="@drawable/default_avata" />
-
-    <TextView
-        android:id="@+id/textContentUser"
+    <LinearLayout
+        android:id="@+id/layout_text_user"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:background="@drawable/rounded_corner1"
-        android:padding="10dp"
         android:layout_alignParentTop="true"
         android:layout_toStartOf="@id/imageView2"
-        android:layout_marginEnd="5dp"
-        android:textAppearance="?android:attr/textAppearanceMedium"
         android:layout_marginStart="20dp"
-        android:text="a"
-        android:textColor="#ffffff" />
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="5dp"
+        android:background="@drawable/rounded_corner1"
+        android:padding="10dp"
+        android:orientation="vertical">
+        <TextView
+            android:id="@+id/textContentUser"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textIsSelectable="true"
+            android:text="a"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:textColor="#FFf" />
+        <TextView
+            android:id="@+id/time_user_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:layout_marginTop="5dp"
+            android:text="yesterday"
+            android:textColor="#FFF"
+            android:textSize="10dp"/>
+    </LinearLayout>
+
+
     <LinearLayout
         android:id="@+id/layout_image_user"
-        android:layout_width="100dp"
-        android:layout_height="100dp"
+        android:layout_width="150dp"
+        android:layout_height="140dp"
         android:layout_alignParentTop="true"
         android:layout_toStartOf="@id/imageView2"
         android:layout_marginStart="20dp"
@@ -41,16 +58,26 @@
         android:background="@drawable/rounded_corner1"
         android:padding="10dp"
         android:visibility="gone"
+        android:orientation="vertical"
         >
         <ImageView
             android:id="@+id/image_user"
-            android:minWidth="100dp"
+            android:minWidth="150dp"
             android:minHeight="100dp"
             android:maxWidth="150dp"
             android:maxHeight="150dp"
             android:background="#000"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
+        <TextView
+            android:id="@+id/time_user_image"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:layout_marginTop="5dp"
+            android:text="yesterday"
+            android:textColor="#FFF"
+            android:textSize="10dp"/>
     </LinearLayout>
 
 </RelativeLayout>
