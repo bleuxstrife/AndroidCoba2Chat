@@ -13,10 +13,14 @@
         android:id="@+id/sendPhotoGallery"
         app:showAsAction="never"/>
 
-    <item
-        android:title="@string/sendLocation"
-        android:id="@+id/sendLocation"
-        app:showAsAction="never"/>
+    <!--<item-->
+        <!--android:title="@string/take_video"-->
+        <!--android:id="@+id/takeVideo"-->
+        <!--app:showAsAction="never"/>-->
 
+    <!--<item-->
+        <!--android:title="@string/choose_video"-->
+        <!--android:id="@+id/chooseVideo"-->
+        <!--app:showAsAction="never"/>-->
 
 </menu>

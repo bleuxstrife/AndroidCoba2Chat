@@ -107,8 +107,11 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     public void clickRegisterLayout(View view) {
-        getWindow().setExitTransition(null);
-        getWindow().setEnterTransition(null);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            getWindow().setExitTransition(null);
+            getWindow().setEnterTransition(null);
+        }
+
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             ActivityOptions options =

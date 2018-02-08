@@ -13,6 +13,8 @@
     <string name="register">REGISTER</string>
     <string name="sendPhoto">Photo Camera</string>
     <string name="sendLocation">Send Location</string>
+    <string name="take_video">Take Video</string>
+    <string name="choose_video">Choose Video</string>
     <string name="sendPhotoGallery">Photo Gallery</string>
     <string name="select_picture_title">Get Photo From</string>
     <string name="hint_username">Enter a new username</string>

@@ -1,10 +1,12 @@
 package com.android.rivchat.ui;
 
+import android.app.Activity;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
@@ -91,6 +93,8 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
     private static final int IMAGE_GALLERY_REQUEST = 1;
     private static final int IMAGE_CAMERA_REQUEST = 2;
     private static final int PLACE_PICKER_REQUEST = 3;
+    public static final int TAKE_VIDEO = 4;
+    public static final int CHOOSE_VIDEO = 5;
     ProgressBar progressBar;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -174,9 +178,11 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.sendPhotoGallery:
                 photoGalleryIntent();
                 break;
-            case R.id.sendLocation:
-//                locationPlacesIntent();
-                break;
+//            case R.id.takeVideo:
+//                startTakeVideoActivity();
+//                break;
+//            case R.id.chooseVideo:
+//                startChooseVideoActivity();
             case android.R.id.home:
                 Intent result = new Intent();
                 result.putExtra("idFriend", idFriend.get(0));
@@ -247,6 +253,19 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
         startActivityForResult(it, IMAGE_CAMERA_REQUEST);
     }
 
+    public void startTakeVideoActivity () {
+
+        Intent takeVideoIntent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
+        if (takeVideoIntent.resolveActivity(getPackageManager()) != null) {
+            startActivityForResult(takeVideoIntent, TAKE_VIDEO);
+        }
+    }
+
+    public void startChooseVideoActivity () {
+        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Video.Media.EXTERNAL_CONTENT_URI);
+        startActivityForResult(intent , CHOOSE_VIDEO);
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 
@@ -270,6 +289,20 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
                     //IS NULL
                 }
             }
+        } else if (requestCode==TAKE_VIDEO){
+            if(resultCode == RESULT_OK){
+                Uri videoUri = data.getData();
+            }
+        } else if(requestCode==CHOOSE_VIDEO){
+            if(requestCode==RESULT_OK){
+                Uri videoUri = data.getData();
+
+                // Let's read picked image path using content resolver
+                String[] filePath = { MediaStore.Video.Media.DATA };
+                Cursor cursor = getContentResolver().query(videoUri, filePath, null, null, null);
+                cursor.moveToFirst();
+                String videoPath = cursor.getString(cursor.getColumnIndex(filePath[0]));
+            }
         }
 //        else if (requestCode == PLACE_PICKER_REQUEST){
 //            if (resultCode == RESULT_OK) {
@@ -292,6 +325,7 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
         intent.setAction(Intent.ACTION_GET_CONTENT);
         startActivityForResult(Intent.createChooser(intent, getString(R.string.select_picture_title)), IMAGE_GALLERY_REQUEST);
     }
+
 
 
     private void sendFileFirebase(StorageReference storageReference, final Uri file){
