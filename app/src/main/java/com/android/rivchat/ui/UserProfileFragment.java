@@ -43,6 +43,8 @@ import com.android.rivchat.model.Configuration;
 import com.android.rivchat.model.User;
 import com.android.rivchat.service.ServiceUtils;
 import com.android.rivchat.util.ImageUtils;
+import com.quickblox.users.QBUsers;
+import com.quickblox.users.model.QBUser;
 import com.yarolegovich.lovelydialog.LovelyInfoDialog;
 import com.yarolegovich.lovelydialog.LovelyProgressDialog;
 
@@ -307,6 +309,7 @@ public class UserProfileFragment extends Fragment {
                         FriendDB.getInstance(getContext()).dropDB();
                         GroupDB.getInstance(getContext()).dropDB();
                         ServiceUtils.stopServiceFriendChat(getContext().getApplicationContext(), true);
+                        QBUsers.signOut();
                         getActivity().finish();
                     }
 

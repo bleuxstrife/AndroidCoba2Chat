@@ -1,5 +1,6 @@
 package com.android.rivchat.ui;
 
+import android.annotation.SuppressLint;
 import android.app.ActivityOptions;
 import android.content.Intent;
 import android.os.Build;
@@ -27,13 +28,19 @@ import com.android.rivchat.R;
 import com.android.rivchat.data.SharedPreferenceHelper;
 import com.android.rivchat.data.StaticConfig;
 import com.android.rivchat.model.User;
+import com.quickblox.auth.session.QBSettings;
+import com.quickblox.chat.QBChatService;
+import com.quickblox.core.QBEntityCallback;
+import com.quickblox.core.ServiceZone;
+import com.quickblox.core.exception.QBResponseException;
+import com.quickblox.users.QBUsers;
+import com.quickblox.users.model.QBUser;
 import com.yarolegovich.lovelydialog.LovelyInfoDialog;
 import com.yarolegovich.lovelydialog.LovelyProgressDialog;
 
 import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 
 
 public class LoginActivity extends AppCompatActivity {
@@ -49,6 +56,12 @@ public class LoginActivity extends AppCompatActivity {
     private FirebaseAuth.AuthStateListener mAuthListener;
     private FirebaseUser user;
     private boolean firstTimeAccess;
+    static final String APP_ID = "68832";
+    static final String AUTH_KEY = "Rp3VNHXD-Ca2nY3";
+    static final String AUTH_SECRET = "nWkbdBkErazPf-c";
+    static final String ACCOUNT_KEY = "vgrCdLswvR-8fVU5uKs2";
+    static final String API_ENDPOINT = "api.quickblox.com";
+    static final String CHAT_ENDPOINT = "chat.quickblox.com";
 
     @Override
     protected void onStart() {
@@ -65,6 +78,19 @@ public class LoginActivity extends AppCompatActivity {
         editTextPassword = (EditText) findViewById(R.id.et_password);
         firstTimeAccess = true;
         initFirebase();
+        initQuickBlox();
+    }
+
+    private void initQuickBlox() {
+        QBSettings.getInstance().init(this,
+                APP_ID,
+                AUTH_KEY,
+                AUTH_SECRET);
+        QBSettings.getInstance().setAccountKey(ACCOUNT_KEY);
+        QBSettings.getInstance().setEndpoints(API_ENDPOINT,
+                CHAT_ENDPOINT,
+                ServiceZone.DEVELOPMENT);
+        QBSettings.getInstance().setZone(ServiceZone.DEVELOPMENT);
     }
 
 
@@ -106,6 +132,7 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
 
+    @SuppressLint("RestrictedApi")
     public void clickRegisterLayout(View view) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             getWindow().setExitTransition(null);
@@ -171,7 +198,7 @@ public class LoginActivity extends AppCompatActivity {
          * @param email
          * @param password
          */
-        void createUser(String email, String password) {
+        void createUser(final String email, final String password) {
             waitingDialog.setIcon(R.drawable.ic_add_friend)
                     .setTitle("Registering....")
                     .setTopColorRes(R.color.colorPrimary)
@@ -206,10 +233,71 @@ public class LoginActivity extends AppCompatActivity {
                                         .setCancelable(false)
                                         .show();
                             } else {
-                                initNewUserInfo();
-                                Toast.makeText(LoginActivity.this, "Register and Login success", Toast.LENGTH_SHORT).show();
-                                startActivity(new Intent(LoginActivity.this, MainActivity.class));
-                                LoginActivity.this.finish();
+                                final QBUser user = new QBUser(email, password);
+                                QBUsers.signUp(user).performAsync(new QBEntityCallback<QBUser>() {
+                                    @Override
+                                    public void onSuccess(QBUser qbUser, Bundle bundle) {
+                                        user.setId(qbUser.getId());
+                                        QBChatService chatService = QBChatService.getInstance();
+                                        chatService.login(user, new QBEntityCallback() {
+                                            @Override
+                                            public void onSuccess(Object result, Bundle params) {
+                                                initNewUserInfo();
+                                                Toast.makeText(LoginActivity.this, "Register and Login success", Toast.LENGTH_SHORT).show();
+                                                startActivity(new Intent(LoginActivity.this, MainActivity.class));
+                                                LoginActivity.this.finish();
+                                            }
+
+                                            @Override
+                                            public void onError(QBResponseException errors) {
+                                                new LovelyInfoDialog(LoginActivity.this) {
+                                                    @Override
+                                                    public LovelyInfoDialog setConfirmButtonText(String text) {
+                                                        findView(com.yarolegovich.lovelydialog.R.id.ld_btn_confirm).setOnClickListener(new View.OnClickListener() {
+                                                            @Override
+                                                            public void onClick(View view) {
+                                                                dismiss();
+                                                            }
+                                                        });
+                                                        return super.setConfirmButtonText(text);
+                                                    }
+                                                }
+                                                        .setTopColorRes(R.color.colorAccent)
+                                                        .setIcon(R.drawable.ic_add_friend)
+                                                        .setTitle("Register false")
+                                                        .setMessage("Email exist or weak password!")
+                                                        .setConfirmButtonText("ok")
+                                                        .setCancelable(false)
+                                                        .show();
+                                            }
+                                        });
+                                    }
+
+
+                                    @Override
+                                    public void onError(QBResponseException e) {
+                                        new LovelyInfoDialog(LoginActivity.this) {
+                                            @Override
+                                            public LovelyInfoDialog setConfirmButtonText(String text) {
+                                                findView(com.yarolegovich.lovelydialog.R.id.ld_btn_confirm).setOnClickListener(new View.OnClickListener() {
+                                                    @Override
+                                                    public void onClick(View view) {
+                                                        dismiss();
+                                                    }
+                                                });
+                                                return super.setConfirmButtonText(text);
+                                            }
+                                        }
+                                                .setTopColorRes(R.color.colorAccent)
+                                                .setIcon(R.drawable.ic_add_friend)
+                                                .setTitle("Register false")
+                                                .setMessage("Email exist or weak password!")
+                                                .setConfirmButtonText("ok")
+                                                .setCancelable(false)
+                                                .show();
+                                    }
+                                });
+
                             }
                         }
                     })
@@ -222,14 +310,13 @@ public class LoginActivity extends AppCompatActivity {
             ;
         }
 
-
         /**
          * Action Login
          *
          * @param email
          * @param password
          */
-        void signIn(String email, String password) {
+        void signIn(final String email, final String password) {
             waitingDialog.setIcon(R.drawable.ic_person_low)
                     .setTitle("Login....")
                     .setTopColorRes(R.color.colorPrimary)
@@ -237,7 +324,7 @@ public class LoginActivity extends AppCompatActivity {
             mAuth.signInWithEmailAndPassword(email, password)
                     .addOnCompleteListener(LoginActivity.this, new OnCompleteListener<AuthResult>() {
                         @Override
-                        public void onComplete(@NonNull Task<AuthResult> task) {
+                        public void onComplete(@NonNull final Task<AuthResult> task) {
                             Log.d(TAG, "signInWithEmail:onComplete:" + task.isSuccessful());
                             // If sign in fails, display a message to the user. If sign in succeeds
                             // the auth state listener will be notified and logic to handle the
@@ -265,9 +352,71 @@ public class LoginActivity extends AppCompatActivity {
                                         .setConfirmButtonText("Ok")
                                         .show();
                             } else {
-                                saveUserInfo();
-                                startActivity(new Intent(LoginActivity.this, MainActivity.class));
-                                LoginActivity.this.finish();
+                                final QBUser user = new QBUser(email, password);
+                                QBUsers.signIn(user).performAsync(new QBEntityCallback<QBUser>() {
+                                    @Override
+                                    public void onSuccess(QBUser qbUser, Bundle bundle) {
+                                        user.setId(qbUser.getId());
+                                        QBChatService chatService = QBChatService.getInstance();
+                                        chatService.login(user, new QBEntityCallback() {
+                                            @Override
+                                            public void onSuccess(Object o, Bundle bundle) {
+                                                saveUserInfo();
+                                                startActivity(new Intent(LoginActivity.this, MainActivity.class));
+                                                LoginActivity.this.finish();
+                                            }
+
+                                            @Override
+                                            public void onError(QBResponseException e) {
+                                                Log.w(TAG, "signInWithEmail:failed", task.getException());
+                                                new LovelyInfoDialog(LoginActivity.this) {
+                                                    @Override
+                                                    public LovelyInfoDialog setConfirmButtonText(String text) {
+                                                        findView(com.yarolegovich.lovelydialog.R.id.ld_btn_confirm).setOnClickListener(new View.OnClickListener() {
+                                                            @Override
+                                                            public void onClick(View view) {
+                                                                dismiss();
+                                                            }
+                                                        });
+                                                        return super.setConfirmButtonText(text);
+                                                    }
+                                                }
+                                                        .setTopColorRes(R.color.colorAccent)
+                                                        .setIcon(R.drawable.ic_person_low)
+                                                        .setTitle("Login false")
+                                                        .setMessage("Email not exist or wrong password!")
+                                                        .setCancelable(false)
+                                                        .setConfirmButtonText("Ok")
+                                                        .show();
+                                            }
+                                        });
+                                    }
+
+                                    @Override
+                                    public void onError(QBResponseException e) {
+                                        Log.w(TAG, "signInWithEmail:failed", task.getException());
+                                        new LovelyInfoDialog(LoginActivity.this) {
+                                            @Override
+                                            public LovelyInfoDialog setConfirmButtonText(String text) {
+                                                findView(com.yarolegovich.lovelydialog.R.id.ld_btn_confirm).setOnClickListener(new View.OnClickListener() {
+                                                    @Override
+                                                    public void onClick(View view) {
+                                                        dismiss();
+                                                    }
+                                                });
+                                                return super.setConfirmButtonText(text);
+                                            }
+                                        }
+                                                .setTopColorRes(R.color.colorAccent)
+                                                .setIcon(R.drawable.ic_person_low)
+                                                .setTitle("Login false")
+                                                .setMessage("Email not exist or wrong password!")
+                                                .setCancelable(false)
+                                                .setConfirmButtonText("Ok")
+                                                .show();
+                                    }
+                                });
+
                             }
                         }
                     })
@@ -309,29 +458,29 @@ public class LoginActivity extends AppCompatActivity {
                                     .show();
                         }
                     })
-            .addOnFailureListener(new OnFailureListener() {
-                @Override
-                public void onFailure(@NonNull Exception e) {
-                    new LovelyInfoDialog(LoginActivity.this) {
+                    .addOnFailureListener(new OnFailureListener() {
                         @Override
-                        public LovelyInfoDialog setConfirmButtonText(String text) {
-                            findView(com.yarolegovich.lovelydialog.R.id.ld_btn_confirm).setOnClickListener(new View.OnClickListener() {
+                        public void onFailure(@NonNull Exception e) {
+                            new LovelyInfoDialog(LoginActivity.this) {
                                 @Override
-                                public void onClick(View view) {
-                                    dismiss();
+                                public LovelyInfoDialog setConfirmButtonText(String text) {
+                                    findView(com.yarolegovich.lovelydialog.R.id.ld_btn_confirm).setOnClickListener(new View.OnClickListener() {
+                                        @Override
+                                        public void onClick(View view) {
+                                            dismiss();
+                                        }
+                                    });
+                                    return super.setConfirmButtonText(text);
                                 }
-                            });
-                            return super.setConfirmButtonText(text);
+                            }
+                                    .setTopColorRes(R.color.colorAccent)
+                                    .setIcon(R.drawable.ic_pass_reset)
+                                    .setTitle("False")
+                                    .setMessage("False to sent email to " + email)
+                                    .setConfirmButtonText("Ok")
+                                    .show();
                         }
-                    }
-                            .setTopColorRes(R.color.colorAccent)
-                            .setIcon(R.drawable.ic_pass_reset)
-                            .setTitle("False")
-                            .setMessage("False to sent email to " + email)
-                            .setConfirmButtonText("Ok")
-                            .show();
-                }
-            });
+                    });
         }
 
         /**
