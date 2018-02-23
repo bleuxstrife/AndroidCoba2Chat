@@ -8,6 +8,7 @@ import android.content.ServiceConnection;
 import android.net.ConnectivityManager;
 import android.os.IBinder;
 
+import com.android.rivchat.util.SharedPrefsHelper;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
@@ -26,6 +27,7 @@ public class ServiceUtils {
     public static final String FOLDER_STORAGE_IMG = "images";
     private static ServiceConnection connectionServiceFriendChatForStart = null;
     private static ServiceConnection connectionServiceFriendChatForDestroy = null;
+    private static SharedPrefsHelper sharedPrefsHelper;
 
     public static boolean isServiceFriendChatRunning(Context context) {
         Class<?> serviceClass = FriendChatService.class;
@@ -151,5 +153,16 @@ public class ServiceUtils {
         }catch (Exception e){
             return true;
         }
+    }
+
+    public static void removeUserData(Context context) {
+        if (sharedPrefsHelper == null) {
+            sharedPrefsHelper = SharedPrefsHelper.getInstance(context);
+        }
+        sharedPrefsHelper.clearAllData();
+//        if (dbManager == null) {
+//            dbManager = QbUsersDbManager.getInstance(context);
+//        }
+//        dbManager.clearDB();
     }
 }

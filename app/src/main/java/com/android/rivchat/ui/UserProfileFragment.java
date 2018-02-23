@@ -25,6 +25,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.rivchat.util.CallService;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.Task;
@@ -309,7 +310,8 @@ public class UserProfileFragment extends Fragment {
                         FriendDB.getInstance(getContext()).dropDB();
                         GroupDB.getInstance(getContext()).dropDB();
                         ServiceUtils.stopServiceFriendChat(getContext().getApplicationContext(), true);
-                        QBUsers.signOut();
+                        CallService.logout(getActivity());
+                        ServiceUtils.removeUserData(getActivity());
                         getActivity().finish();
                     }
 

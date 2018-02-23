@@ -2,6 +2,7 @@ package com.android.rivchat.ui;
 
 import android.annotation.SuppressLint;
 import android.app.ActivityOptions;
+import android.app.PendingIntent;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
@@ -13,6 +14,9 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.android.rivchat.util.CallService;
+import com.android.rivchat.util.Consts;
+import com.android.rivchat.util.SharedPrefsHelper;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.Task;
@@ -192,12 +196,20 @@ public class LoginActivity extends AppCompatActivity {
      * Dinh nghia cac ham tien ich cho quas trinhf dang nhap, dang ky,...
      */
     class AuthUtils {
-        /**
-         * Action register
-         *
-         * @param email
-         * @param password
-         */
+
+
+        void startLoginService(QBUser qbUser) {
+            Intent tempIntent = new Intent(LoginActivity.this, CallService.class);
+            PendingIntent pendingIntent = createPendingResult(Consts.EXTRA_LOGIN_RESULT_CODE, tempIntent, 0);
+            CallService.start(LoginActivity.this, qbUser, pendingIntent);
+        }
+
+        void saveUserData(QBUser qbUser) {
+            SharedPrefsHelper sharedPrefsHelper = SharedPrefsHelper.getInstance(LoginActivity.this);
+            sharedPrefsHelper.save(Consts.PREF_CURREN_ROOM_NAME, qbUser.getTags().get(0));
+            sharedPrefsHelper.saveQbUser(qbUser);
+        }
+
         void createUser(final String email, final String password) {
             waitingDialog.setIcon(R.drawable.ic_add_friend)
                     .setTitle("Registering....")
@@ -238,39 +250,13 @@ public class LoginActivity extends AppCompatActivity {
                                     @Override
                                     public void onSuccess(QBUser qbUser, Bundle bundle) {
                                         user.setId(qbUser.getId());
-                                        QBChatService chatService = QBChatService.getInstance();
-                                        chatService.login(user, new QBEntityCallback() {
-                                            @Override
-                                            public void onSuccess(Object result, Bundle params) {
-                                                initNewUserInfo();
-                                                Toast.makeText(LoginActivity.this, "Register and Login success", Toast.LENGTH_SHORT).show();
-                                                startActivity(new Intent(LoginActivity.this, MainActivity.class));
-                                                LoginActivity.this.finish();
-                                            }
+                                        initNewUserInfo();
+                                        Toast.makeText(LoginActivity.this, "Register and Login success", Toast.LENGTH_SHORT).show();
+                                        startActivity(new Intent(LoginActivity.this, MainActivity.class));
+                                        startLoginService(qbUser);
+                                        saveUserData(qbUser);
+                                        LoginActivity.this.finish();
 
-                                            @Override
-                                            public void onError(QBResponseException errors) {
-                                                new LovelyInfoDialog(LoginActivity.this) {
-                                                    @Override
-                                                    public LovelyInfoDialog setConfirmButtonText(String text) {
-                                                        findView(com.yarolegovich.lovelydialog.R.id.ld_btn_confirm).setOnClickListener(new View.OnClickListener() {
-                                                            @Override
-                                                            public void onClick(View view) {
-                                                                dismiss();
-                                                            }
-                                                        });
-                                                        return super.setConfirmButtonText(text);
-                                                    }
-                                                }
-                                                        .setTopColorRes(R.color.colorAccent)
-                                                        .setIcon(R.drawable.ic_add_friend)
-                                                        .setTitle("Register false")
-                                                        .setMessage("Email exist or weak password!")
-                                                        .setConfirmButtonText("ok")
-                                                        .setCancelable(false)
-                                                        .show();
-                                            }
-                                        });
                                     }
 
 
@@ -306,16 +292,9 @@ public class LoginActivity extends AppCompatActivity {
                         public void onFailure(@NonNull Exception e) {
                             waitingDialog.dismiss();
                         }
-                    })
-            ;
+                    });
         }
 
-        /**
-         * Action Login
-         *
-         * @param email
-         * @param password
-         */
         void signIn(final String email, final String password) {
             waitingDialog.setIcon(R.drawable.ic_person_low)
                     .setTitle("Login....")
@@ -357,39 +336,10 @@ public class LoginActivity extends AppCompatActivity {
                                     @Override
                                     public void onSuccess(QBUser qbUser, Bundle bundle) {
                                         user.setId(qbUser.getId());
-                                        QBChatService chatService = QBChatService.getInstance();
-                                        chatService.login(user, new QBEntityCallback() {
-                                            @Override
-                                            public void onSuccess(Object o, Bundle bundle) {
-                                                saveUserInfo();
-                                                startActivity(new Intent(LoginActivity.this, MainActivity.class));
-                                                LoginActivity.this.finish();
-                                            }
-
-                                            @Override
-                                            public void onError(QBResponseException e) {
-                                                Log.w(TAG, "signInWithEmail:failed", task.getException());
-                                                new LovelyInfoDialog(LoginActivity.this) {
-                                                    @Override
-                                                    public LovelyInfoDialog setConfirmButtonText(String text) {
-                                                        findView(com.yarolegovich.lovelydialog.R.id.ld_btn_confirm).setOnClickListener(new View.OnClickListener() {
-                                                            @Override
-                                                            public void onClick(View view) {
-                                                                dismiss();
-                                                            }
-                                                        });
-                                                        return super.setConfirmButtonText(text);
-                                                    }
-                                                }
-                                                        .setTopColorRes(R.color.colorAccent)
-                                                        .setIcon(R.drawable.ic_person_low)
-                                                        .setTitle("Login false")
-                                                        .setMessage("Email not exist or wrong password!")
-                                                        .setCancelable(false)
-                                                        .setConfirmButtonText("Ok")
-                                                        .show();
-                                            }
-                                        });
+                                        saveUserInfo();
+                                        startLoginService(qbUser);
+                                        startActivity(new Intent(LoginActivity.this, MainActivity.class));
+                                        LoginActivity.this.finish();
                                     }
 
                                     @Override
