@@ -50,4 +50,8 @@
         <item name="colorAccent">#4fa881</item>
         <item name="android:windowBackground">@drawable/bg</item>
     </style>
+    <style name="MatchParent">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">match_parent</item>
+    </style>
 </resources>

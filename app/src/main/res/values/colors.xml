@@ -10,4 +10,6 @@
     <color name="grey_500">#a4a4a4</color>
     <color name="grey_100">#F5F5F5</color>
     <color name="grey_800">#212121</color>
+    <color name="color_green_qb">#4ad24d</color>
+    <color name="color_accent">@color/color_green_qb</color>
 </resources>

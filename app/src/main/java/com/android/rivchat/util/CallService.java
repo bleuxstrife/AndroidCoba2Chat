@@ -9,12 +9,14 @@ import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import com.android.rivchat.ui.LoginActivity;
 import com.quickblox.chat.QBChatService;
 import com.quickblox.chat.QBSignaling;
 import com.quickblox.chat.QBWebRTCSignaling;
 import com.quickblox.chat.listeners.QBVideoChatSignalingManagerListener;
 import com.quickblox.core.QBEntityCallback;
 import com.quickblox.core.exception.QBResponseException;
+import com.quickblox.users.QBUsers;
 import com.quickblox.users.model.QBUser;
 import com.quickblox.videochat.webrtc.QBRTCClient;
 import com.quickblox.videochat.webrtc.QBRTCConfig;
@@ -140,14 +142,20 @@ public class CallService extends Service {
             }
         }
     }
+    void saveUserData(QBUser qbUser) {
 
+    }
     public static void logout(Context context) {
         Intent intent = new Intent(context, CallService.class);
         intent.putExtra(Consts.EXTRA_COMMAND_TO_SERVICE, Consts.COMMAND_LOGOUT);
+        SharedPrefsHelper sharedPrefsHelper = SharedPrefsHelper.getInstance(context);
+        sharedPrefsHelper.clearAllData();
+        QBUsers.signOut();
         context.startService(intent);
     }
     private void logout() {
         destroyRtcClientAndChat();
+
     }
 
     private void destroyRtcClientAndChat() {

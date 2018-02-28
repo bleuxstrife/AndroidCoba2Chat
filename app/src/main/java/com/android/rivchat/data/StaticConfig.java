@@ -11,9 +11,12 @@ public class StaticConfig {
     public static String STR_EXTRA_PASSWORD = "password";
     public static String STR_DEFAULT_BASE64 = "default";
     public static String UID = "";
+    public static String EXTRA_IS_INCOMING_CALL = "conversation_reason";
+    public static String WIFI_DISABLED = "wifi_disabled";
     //TODO only use this UID for debug mode
 //    public static String UID = "6kU0SbJPF5QJKZTfvW1BqKolrx22";
     public static String INTENT_KEY_CHAT_FRIEND = "friendname";
+    public static String INTENT_KEY_CHAT_EMAIL = "friendemail";
     public static String INTENT_KEY_CHAT_AVATA = "friendavata";
     public static String INTENT_KEY_CHAT_ID = "friendid";
     public static String INTENT_KEY_CHAT_ROOM_ID = "roomid";

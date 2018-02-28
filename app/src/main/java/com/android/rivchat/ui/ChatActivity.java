@@ -56,6 +56,10 @@ import com.android.rivchat.model.Message;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+import com.quickblox.core.QBEntityCallback;
+import com.quickblox.core.exception.QBResponseException;
+import com.quickblox.users.QBUsers;
+import com.quickblox.users.model.QBUser;
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
@@ -96,6 +100,7 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
     public static final int TAKE_VIDEO = 4;
     public static final int CHOOSE_VIDEO = 5;
     ProgressBar progressBar;
+    String emailFriend;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -104,6 +109,18 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
         idFriend = intentData.getCharSequenceArrayListExtra(StaticConfig.INTENT_KEY_CHAT_ID);
         roomId = intentData.getStringExtra(StaticConfig.INTENT_KEY_CHAT_ROOM_ID);
         String nameFriend = intentData.getStringExtra(StaticConfig.INTENT_KEY_CHAT_FRIEND);
+        emailFriend = intentData.getStringExtra(StaticConfig.INTENT_KEY_CHAT_EMAIL);
+        QBUsers.getUserByEmail(emailFriend).performAsync(new QBEntityCallback<QBUser>() {
+            @Override
+            public void onSuccess(QBUser qbUser, Bundle bundle) {
+                Toast.makeText(ChatActivity.this, ""+qbUser.getEmail(), Toast.LENGTH_SHORT);
+            }
+
+            @Override
+            public void onError(QBResponseException e) {
+                Toast.makeText(ChatActivity.this, ""+e, Toast.LENGTH_SHORT);
+            }
+        });
         progressBar = (ProgressBar) findViewById(R.id.progressBar);
         consersation = new Consersation();
         btnSend = (ImageButton) findViewById(R.id.btnSend);

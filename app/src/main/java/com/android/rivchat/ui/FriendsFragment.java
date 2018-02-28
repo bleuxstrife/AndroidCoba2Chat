@@ -457,6 +457,7 @@ class ListFriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         final String id = listFriend.getListFriend().get(position).id;
         final String idRoom = listFriend.getListFriend().get(position).idRoom;
         final String avata = listFriend.getListFriend().get(position).avata;
+        final String email = listFriend.getListFriend().get(position).email;
         ((ItemFriendViewHolder) holder).txtName.setText(name);
 
         ((View) ((ItemFriendViewHolder) holder).txtName.getParent().getParent().getParent())
@@ -467,6 +468,7 @@ class ListFriendsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                         ((ItemFriendViewHolder) holder).txtName.setTypeface(Typeface.DEFAULT);
                         Intent intent = new Intent(context, ChatActivity.class);
                         intent.putExtra(StaticConfig.INTENT_KEY_CHAT_FRIEND, name);
+                        intent.putExtra(StaticConfig.INTENT_KEY_CHAT_EMAIL, email);
                         ArrayList<CharSequence> idFriend = new ArrayList<CharSequence>();
                         idFriend.add(id);
                         intent.putCharSequenceArrayListExtra(StaticConfig.INTENT_KEY_CHAT_ID, idFriend);

@@ -37,11 +37,13 @@ import com.quickblox.chat.QBChatService;
 import com.quickblox.core.QBEntityCallback;
 import com.quickblox.core.ServiceZone;
 import com.quickblox.core.exception.QBResponseException;
+import com.quickblox.core.helper.StringifyArrayList;
 import com.quickblox.users.QBUsers;
 import com.quickblox.users.model.QBUser;
 import com.yarolegovich.lovelydialog.LovelyInfoDialog;
 import com.yarolegovich.lovelydialog.LovelyProgressDialog;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -245,7 +247,13 @@ public class LoginActivity extends AppCompatActivity {
                                         .setCancelable(false)
                                         .show();
                             } else {
-                                final QBUser user = new QBUser(email, password);
+                                final QBUser user = new QBUser();
+                                user.setLogin(email);
+                                user.setPassword(password);
+                                StringifyArrayList<String> tag = new StringifyArrayList<>();
+                                tag.add("bunda");
+                                user.setTags(tag);
+                                user.setEmail(email);
                                 QBUsers.signUp(user).performAsync(new QBEntityCallback<QBUser>() {
                                     @Override
                                     public void onSuccess(QBUser qbUser, Bundle bundle) {
